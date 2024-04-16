@@ -1,0 +1,7 @@
+node_modules
+.env
+current_seed
+login_seed
+top_seed
+user_seed
+package-lock.json

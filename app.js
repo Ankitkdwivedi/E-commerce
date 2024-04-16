@@ -41,7 +41,7 @@ app.get('/products',async (req,res)=>{
     }
     let no_of_login=await Login.find({islogin:true});
     let login_count = Object.keys(no_of_login).length;
-    res.render('index',{products,topProducts,wish_count,cart_count,login_count});
+    res.render('index',{ current, products,topProducts,wish_count,cart_count,login_count});
 })
 
 app.get('/about',async (req,res)=>{
@@ -55,7 +55,7 @@ app.get('/about',async (req,res)=>{
     }
     let no_of_login=await Login.find({islogin:true});
     let login_count = Object.keys(no_of_login).length;
-    res.render('about',{wish_count,cart_count,login_count});
+    res.render('about',{ current, wish_count,cart_count,login_count});
 })
 app.get('/contact',async (req,res)=>{
     let current = await Current.findOne({});
@@ -68,7 +68,7 @@ app.get('/contact',async (req,res)=>{
     }
     let no_of_login=await Login.find({islogin:true});
     let login_count = Object.keys(no_of_login).length;
-    res.render('contact',{wish_count,cart_count,login_count});
+    res.render('contact',{ current, wish_count,cart_count,login_count});
 })
 
 app.get('/product/:id',async (req,res)=>{
@@ -78,7 +78,7 @@ app.get('/product/:id',async (req,res)=>{
     let login_count = Object.keys(no_of_login).length;
     let current = await Current.findOne({});
     let user = await User.findOne({ name : current.name })
-    res.render('show',{ product,login_count,current,user});
+    res.render('show',{ current,  product,login_count,current,user});
 })
 
 app.get('/cart',async (req,res)=>{
@@ -93,7 +93,7 @@ app.get('/cart',async (req,res)=>{
     }
     let no_of_login=await Login.find({islogin:true});
     let login_count = Object.keys(no_of_login).length;
-    res.render('cart',{ products,cart_count,wish_count,current,user,login_count });
+    res.render('cart',{ current,  products,cart_count,wish_count,current,user,login_count });
 });
 app.get('/wish',async (req,res)=>{
     let products = await Product.find({});
@@ -107,7 +107,7 @@ app.get('/wish',async (req,res)=>{
     }
     let no_of_login=await Login.find({islogin:true});
     let login_count = Object.keys(no_of_login).length;
-    res.render('wishlist',{ products,user,wish_count,cart_count,login_count });
+    res.render('wishlist',{ current,  products,user,wish_count,cart_count,login_count });
 })
 
 app.get('/checkout/:total',async (req,res)=>{
@@ -125,7 +125,7 @@ app.get('/checkout/:total',async (req,res)=>{
     if(total<500 && total!=0) total+=40;
     let no_of_login=await Login.find({islogin:true});
     let login_count = Object.keys(no_of_login).length;
-    res.render('checkout', { total,cart_count,wish_count,login_count });
+    res.render('checkout',{ current,  total,cart_count,wish_count,login_count });
 })
 app.get('/wish/:id',async(req,res)=>{
     const {id}=req.params;
@@ -144,7 +144,7 @@ app.get('/wish/:id',async(req,res)=>{
 
 app.get('/profile',async (req,res)=>{
     let current = await Current.findOne({});
-    res.render('profile',{current});
+    res.render('profile',{ current, current});
 })
 
 app.get('/wish/:id/add2cart',async(req,res)=>{
@@ -229,6 +229,7 @@ app.get('/product/:id/add2wish',async (req,res)=>{
     res.redirect(`/product/${id}`);
 });
 
+
 app.get('/login',(req,res)=>{
     res.render("login");
 })
@@ -288,13 +289,42 @@ app.post('/logout',async (req,res)=>{
     }
   });
 
-app.get('*',(req,res)=>{
-    res.send('<h1>So Sorry!!</h1><br><br><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=1924&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" width="500" height="500" alt="Loading...">');
-})
+  
+  
+  
+  const authorizeUser = async (req, res, next) => {
+    let current = await Current.findOne({});
+    if (current.name === 'akd123') {
+        // If authorized, proceed to the next middleware or route handler
+        next();
+    } else {
+        // If not authorized, send a 403 Forbidden response
+        res.redirect('error');
+    }
+};
 
+// Use the middleware function in your route handler
+app.get('/sales', authorizeUser, async (req, res) => {
+    let current = await Current.findOne({});
+    let user = await User.findOne({ name: current.name });
+    let wish_count = 0;
+    let cart_count = 0;
+    if (user != null) {
+        wish_count = user.wishlist.length;
+        cart_count = user.cartlist.length;
+    }
+    let no_of_login = await Login.find({ islogin: true });
+    let login_count = Object.keys(no_of_login).length;
+    res.render('Dashboard',{ current,  wish_count, cart_count, login_count });
+});
+    
+    app.get('*',(req,res)=>{
+        res.send('<h1>So Sorry!!</h1><br><br><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=1924&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" width="500" height="500" alt="Loading..."> <a href="/products">Home</a>');
+    })
 app.listen(port,()=>{
     console.log("Server is start working..");
 })
+
 
 
 // Seed => top_seed , product_seed , login_seed
